@@ -14,7 +14,9 @@ export const credits = () => {
     "background: #ffffff; padding:5px 0;",
   ];
 
-  console.log.apply(console, myInfo);
+  if (typeof window !== "undefined") {
+    console.log.apply(console, myInfo);
+  }
 };
 
 export default credits;
