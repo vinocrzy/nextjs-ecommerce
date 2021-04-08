@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p ${PORT:-8080}",
     "start:local": "npm run build && next start",
-    "export": "npm run build && next export"
+    "export": "npm run build && next export",
+    "dev:host": "next dev -p 3005 -H"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
