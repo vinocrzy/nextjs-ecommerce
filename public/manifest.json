@@ -1,0 +1,29 @@
+{
+  "name": "Your Site Title",
+  "short_name": "Your Site Title Short",
+  "description": "Your Site Discription",
+  "icons": [
+    {
+      "src": "/images/app/app-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/app/app-384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/app/app-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "lang": "en",
+  "categories": ["business", "ecommerce"],
+  "theme_color": "#1a1818",
+  "background_color": "#1a1818",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}
