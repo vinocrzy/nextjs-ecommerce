@@ -15,16 +15,66 @@ class MyApp extends App {
   state = {
     user: null,
     cart: { items: [], total: 0 },
+    darkTheme: false,
+    width: undefined,
+    height: undefined,
   };
 
   componentDidMount() {
     credits();
+
+    this.updateDimensions();
+    window.addEventListener("resize", this.updateDimensions.bind(this));
+
+    const token = Cookie.get("token");
+    // restore cart from cookie, this could also be tracked in a db
+    const cart = Cookie.get("cart");
+
+    if (typeof cart === "string" && cart !== "undefined") {
+      JSON.parse(cart).forEach((item) => {
+        this.setState({
+          cart: { items: JSON.parse(cart), total: item.price * item.quantity },
+        });
+      });
+    }
+    if (token) {
+      // authenticate the token on the server and place set user object
+      fetch("http://localhost:1337/users/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).then(async (res) => {
+        // if res comes back not valid, token is not valid
+        // delete the token and log the user out on client
+        if (!res.ok) {
+          Cookie.remove("token");
+          this.setState({ user: null });
+          return null;
+        }
+        const user = await res.json();
+        this.setUser(user);
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.updateDimensions.bind(this));
   }
 
   // context functions
 
+  updateDimensions() {
+    this.setState({ width: window.innerWidth, height: window.innerHeight });
+  }
+
   setUser = (user) => {
     this.setState({ user });
+  };
+
+  toggleTheme = () => {
+    darkTheme
+      ? this.setState({ darkTheme: false })
+      : this.setState({ darkTheme: true });
   };
 
   addItem = (item) => {
@@ -103,14 +153,18 @@ class MyApp extends App {
           user: this.state.user,
           isAuthenticated: !!this.state.user,
           cart: this.state.cart,
+          darkTheme: this.state.darkTheme,
+          deviceWidth: this.state.width,
           setUser: this.setUser,
           addItem: this.addItem,
           removeItem: this.removeItem,
+          toggleTheme: this.toggleTheme,
         }}
       >
         <DefaultSeo {...SEO} />
         <NextNprogress
           options={{ easing: "ease", speed: 500, showSpinner: false }}
+          color="linear-gradient(90deg, #5f3f91, #8c2483, #e4003f)"
         />
         <Head>
           <link rel="icon" href="/favicon.ico" />
