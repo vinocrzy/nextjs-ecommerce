@@ -5,9 +5,9 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 Template your next app with ecommerce:
 
 ```bash
-npx create-next-app --example [nextjs-ecommerce](https://github.com/vinocrzy/nextjs-ecommerce)
+npx create-next-app --example https://github.com/vinocrzy/nextjs-ecommerce
 # or
-yarn create next-app --example [nextjs-ecommerce](https://github.com/vinocrzy/nextjs-ecommerce)
+yarn create next-app --example https://github.com/vinocrzy/nextjs-ecommerce
 ```
 ## Getting Started
 
