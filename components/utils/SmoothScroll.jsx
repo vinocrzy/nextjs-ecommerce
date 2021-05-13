@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from "react";
 
 import useWindowSize from "../../hooks/useWindowSize";
 
+// import Footer from "../../layout/components/Footer";
+
 const SmoothScroll = ({ children }) => {
   // 1.
   const windowSize = useWindowSize();
@@ -19,10 +21,17 @@ const SmoothScroll = ({ children }) => {
 
   // 4.
   useEffect(() => {
+    setTimeout(
+      function () {
+        setBodyHeight();
+      }.bind(this),
+      100
+    );
     setBodyHeight();
-  }, [windowSize.height]);
+  }, [windowSize.height, children]);
 
   const setBodyHeight = () => {
+    // console.log(FooterRef.current.firstChild.getBoundingClientRect());
     document.body.style.height = `${
       scrollingContainerRef.current.getBoundingClientRect().height
     }px`;
@@ -30,22 +39,28 @@ const SmoothScroll = ({ children }) => {
 
   // 5.
   useEffect(() => {
-    requestAnimationFrame(() => smoothScrollingHandler());
-  }, []);
+    windowSize.width > 500
+      ? requestAnimationFrame(() => smoothScrollingHandler())
+      : null;
+  }, [windowSize, children]);
 
   const smoothScrollingHandler = () => {
     data.current = window.scrollY;
     data.previous += (data.current - data.previous) * data.ease;
     data.rounded = Math.round(data.previous * 100) / 100;
 
-    scrollingContainerRef.current.style.transform = `translateY(-${data.previous}px)`;
+    scrollingContainerRef.current
+      ? (scrollingContainerRef.current.style.transform = `translateY(-${data.previous}px)`)
+      : null;
+
+    setBodyHeight();
 
     // Recursive call
     requestAnimationFrame(() => smoothScrollingHandler());
   };
 
   return (
-    <div className="parent">
+    <div className="scroll-parent">
       <div ref={scrollingContainerRef}>{children}</div>
     </div>
   );

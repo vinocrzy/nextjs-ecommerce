@@ -1,23 +1,33 @@
-import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/globals.scss";
+
 import Head from "next/head";
 import { DefaultSeo } from "next-seo";
-import SEO from "../seo.config";
-import { AnimatePresence } from "framer-motion";
-import Layout from "../layout";
+import { ApolloProvider } from "@apollo/client";
 import NextNprogress from "nextjs-progressbar";
-import { credits } from "../helper/credits";
 import App from "next/app";
-import AppContext from "../context/AppContext";
 import Cookie from "js-cookie";
+
+import SEO from "../seo.config";
+import client from "../helper/ApolloClient";
+import Layout from "../layout";
+import { credits } from "../helper/credits";
+import AppContext from "../context/AppContext";
 
 class MyApp extends App {
   state = {
     user: null,
-    cart: { items: [], total: 0 },
+    cart: { items: [], total: 0, totalQuantity: 0 },
+    wishlist: { items: [] },
     darkTheme: false,
     width: undefined,
     height: undefined,
+    isCartOpen: false,
+    isOrderOpen: false,
+    isWishlistOpen: false,
+    isMenuOpen: false,
+    modalLogin: false,
+    modalSignup: false,
+    searchQuery: "",
   };
 
   componentDidMount() {
@@ -28,18 +38,44 @@ class MyApp extends App {
 
     const token = Cookie.get("token");
     // restore cart from cookie, this could also be tracked in a db
-    const cart = Cookie.get("cart");
+    const cart = localStorage.getItem("cart");
+
+    const darkTheme = localStorage.getItem("darkTheme")
+      ? JSON.parse(localStorage.getItem("darkTheme"))
+      : false;
+
+    const wishlist = localStorage.getItem("wishlist")
+      ? JSON.parse(localStorage.getItem("wishlist"))
+      : [];
+
+    this.setState({
+      wishlist: {
+        items: wishlist,
+      },
+    });
+
+    this.setState({
+      darkTheme: darkTheme,
+    });
+
+    // console.log(this.state);
 
     if (typeof cart === "string" && cart !== "undefined") {
+      var totalQuantity = 0;
       JSON.parse(cart).forEach((item) => {
+        totalQuantity += item.quantity;
         this.setState({
-          cart: { items: JSON.parse(cart), total: item.price * item.quantity },
+          cart: {
+            items: JSON.parse(cart),
+            total: item.price * item.quantity,
+            totalQuantity: totalQuantity,
+          },
         });
       });
     }
     if (token) {
       // authenticate the token on the server and place set user object
-      fetch("http://localhost:1337/users/me", {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -71,10 +107,66 @@ class MyApp extends App {
     this.setState({ user });
   };
 
+  setCartOpen = (val) => {
+    this.setState({ isCartOpen: val });
+  };
+
+  setOrderOpen = (val) => {
+    this.setState({ isOrderOpen: val });
+  };
+
+  setWishlistOpen = (val) => {
+    this.setState({ isWishlistOpen: val });
+  };
+  setMenuOpen = (val) => {
+    this.setState({ isMenuOpen: val });
+  };
+  setModalLogin = (val) => {
+    this.setState({ modalLogin: val });
+  };
+  setModalSignup = (val) => {
+    this.setState({ modalSignup: val });
+  };
+  setSearchQuery = (val) => {
+    this.setState({ searchQuery: val });
+  };
+
   toggleTheme = () => {
-    darkTheme
+    this.state.darkTheme
       ? this.setState({ darkTheme: false })
       : this.setState({ darkTheme: true });
+    document ? (document.body.className = "") : null;
+    document
+      ? document.body.classList.add(
+          `${this.state.darkTheme ? "light" : "dark"}`
+        )
+      : null;
+
+    setTimeout(
+      () =>
+        typeof window !== "undefined"
+          ? localStorage.setItem("darkTheme", this.state.darkTheme)
+          : null,
+      100
+    );
+  };
+
+  clearCart = () => {
+    this.setState({
+      cart: {
+        items: [],
+        total: 0,
+        totalQuantity: 0,
+      },
+    });
+
+    setTimeout(
+      () =>
+        typeof window !== "undefined"
+          ? localStorage.setItem("cart", JSON.stringify([]))
+          : null,
+      100
+    );
   };
 
   addItem = (item) => {
@@ -86,31 +178,76 @@ class MyApp extends App {
     if (!newItem) {
       //set quantity property to 1
       item.quantity = 1;
-      console.log(this.state.cart.total, item.price);
-      this.setState(
-        {
-          cart: {
-            items: [...items, item],
-            total: this.state.cart.total + item.price,
-          },
+      // console.log(this.state.cart.total, item.price);
+      this.setState({
+        cart: {
+          items: [...items, item],
+          total: this.state.cart.total + item.price,
+          totalQuantity: this.state.cart.totalQuantity + 1,
         },
-        () => Cookie.set("cart", this.state.cart.items)
+      });
+
+      setTimeout(
+        () =>
+          typeof window !== "undefined"
+            ? localStorage.setItem(
+                "cart",
+                JSON.stringify(this.state.cart.items)
+              )
+            : null,
+        100
       );
     } else {
-      this.setState(
-        {
-          cart: {
-            items: this.state.cart.items.map((item) =>
-              item.id === newItem.id
-                ? Object.assign({}, item, { quantity: item.quantity + 1 })
-                : item
-            ),
-            total: this.state.cart.total + item.price,
-          },
+      this.setState({
+        cart: {
+          items: this.state.cart.items.map((item) =>
+            item.id === newItem.id
+              ? Object.assign({}, item, { quantity: item.quantity + 1 })
+              : item
+          ),
+          total: this.state.cart.total + item.price,
+          totalQuantity: this.state.cart.totalQuantity + 1,
         },
-        () => Cookie.set("cart", this.state.cart.items)
+      });
+
+      setTimeout(
+        () =>
+          typeof window !== "undefined"
+            ? localStorage.setItem(
+                "cart",
+                JSON.stringify(this.state.cart.items)
+              )
+            : null,
+        100
       );
     }
+  };
+
+  deleteItem = (item) => {
+    let { items } = this.state.cart;
+    //check for item already in cart
+    //if not in cart, add item if item is found increase quanity ++
+    const newItem = items.find((i) => i.id === item.id);
+
+    const thisItems = [...this.state.cart.items];
+    const index = thisItems.findIndex((i) => i.id === newItem.id);
+
+    thisItems.splice(index, 1);
+    this.setState({
+      cart: {
+        items: thisItems,
+        total: this.state.cart.total - item.price * item.quantity,
+        totalQuantity: this.state.cart.totalQuantity - item.quantity,
+      },
+    });
+
+    setTimeout(
+      () =>
+        typeof window !== "undefined"
+          ? localStorage.setItem("cart", JSON.stringify(this.state.cart.items))
+          : null,
+      100
+    );
   };
 
   removeItem = (item) => {
@@ -128,9 +265,21 @@ class MyApp extends App {
                 : item
             ),
             total: this.state.cart.total - item.price,
+            totalQuantity: this.state.cart.totalQuantity - 1,
           },
         },
         () => Cookie.set("cart", this.state.cart.items)
+      );
+
+      setTimeout(
+        () =>
+          typeof window !== "undefined"
+            ? localStorage.setItem(
+                "cart",
+                JSON.stringify(this.state.cart.items)
+              )
+            : null,
+        100
       );
     } else {
       const items = [...this.state.cart.items];
@@ -138,29 +287,118 @@ class MyApp extends App {
 
       items.splice(index, 1);
       this.setState(
-        { cart: { items: items, total: this.state.cart.total - item.price } },
+        {
+          cart: {
+            items: items,
+            total: this.state.cart.total - item.price,
+            totalQuantity: this.state.cart.totalQuantity - 1,
+          },
+        },
         () => Cookie.set("cart", this.state.cart.items)
       );
+
+      setTimeout(
+        () =>
+          typeof window !== "undefined"
+            ? localStorage.setItem(
+                "cart",
+                JSON.stringify(this.state.cart.items)
+              )
+            : null,
+        100
+      );
     }
+  };
+
+  addItemWishlist = (item) => {
+    let { items } = this.state.wishlist;
+
+    const newItem = items.find((i) => i.id === item.id);
+    // if item is not new, add to cart, set quantity to 1
+    if (!newItem) {
+      this.setState({
+        wishlist: {
+          items: [...items, item],
+        },
+      });
+
+      setTimeout(
+        () =>
+          typeof window !== "undefined"
+            ? localStorage.setItem(
+                "wishlist",
+                JSON.stringify(this.state.wishlist.items)
+              )
+            : null,
+        100
+      );
+    }
+  };
+
+  deleteItemWishlist = (item) => {
+    let { items } = this.state.wishlist;
+    //check for item already in wishlist
+    //if not in wishlist, add item if item is found increase quanity ++
+    const newItem = items.find((i) => i.id === item.id);
+
+    const thisItems = [...this.state.wishlist.items];
+    const index = thisItems.findIndex((i) => i.id === newItem.id);
+
+    thisItems.splice(index, 1);
+    this.setState({
+      wishlist: {
+        items: thisItems,
+      },
+    });
+
+    setTimeout(
+      () =>
+        typeof window !== "undefined"
+          ? localStorage.setItem(
+              "wishlist",
+              JSON.stringify(this.state.wishlist.items)
+            )
+          : null,
+      100
+    );
   };
 
   render() {
     const { Component, pageProps, router } = this.props;
 
+    const AppProps = {
+      user: this.state.user,
+      isAuthenticated: !!this.state.user,
+      cart: this.state.cart,
+      wishlist: this.state.wishlist,
+      darkTheme: this.state.darkTheme,
+      deviceWidth: this.state.width,
+      isCartOpen: this.state.isCartOpen,
+      isOrderOpen: this.state.isOrderOpen,
+      isWishlistOpen: this.state.isWishlistOpen,
+      isMenuOpen: this.state.isMenuOpen,
+      modalLogin: this.state.modalLogin,
+      modalSignup: this.state.modalSignup,
+      searchQuery: this.state.searchQuery,
+      setSearchQuery: this.setSearchQuery,
+      setUser: this.setUser,
+      addItem: this.addItem,
+      removeItem: this.removeItem,
+      deleteItem: this.deleteItem,
+      clearCart: this.clearCart,
+      addItemWishlist: this.addItemWishlist,
+      deleteItemWishlist: this.deleteItemWishlist,
+      toggleTheme: this.toggleTheme,
+      setCartOpen: this.setCartOpen,
+      setOrderOpen: this.setOrderOpen,
+      setWishlistOpen: this.setWishlistOpen,
+      setMenuOpen: this.setMenuOpen,
+      setModalLogin: this.setModalLogin,
+      setModalSignup: this.setModalSignup,
+    };
+
     return (
-      <AppContext.Provider
-        value={{
-          user: this.state.user,
-          isAuthenticated: !!this.state.user,
-          cart: this.state.cart,
-          darkTheme: this.state.darkTheme,
-          deviceWidth: this.state.width,
-          setUser: this.setUser,
-          addItem: this.addItem,
-          removeItem: this.removeItem,
-          toggleTheme: this.toggleTheme,
-        }}
-      >
+      <AppContext.Provider value={AppProps}>
         <DefaultSeo {...SEO} />
         <NextNprogress
           options={{ easing: "ease", speed: 500, showSpinner: false }}
@@ -169,11 +407,13 @@ class MyApp extends App {
         <Head>
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <Layout page={router.route}>
-          <AnimatePresence exitBeforeEnter>
-            <Component {...pageProps} key={router.route} />
-          </AnimatePresence>
-        </Layout>
+        <div className={`app-theme ${this.state.darkTheme ? "dark" : "light"}`}>
+          <ApolloProvider client={client}>
+            <Layout page={router.route}>
+              <Component {...pageProps} key={router.route} />
+            </Layout>
+          </ApolloProvider>
+        </div>
       </AppContext.Provider>
     );
   }

@@ -11,13 +11,15 @@
     "dev:host": "next dev -p 3005 -H"
   },
   "dependencies": {
+    "@apollo/client": "^3.3.18",
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
     "@fortawesome/free-brands-svg-icons": "^5.15.3",
     "@fortawesome/free-regular-svg-icons": "^5.15.3",
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@fortawesome/react-fontawesome": "^0.1.14",
-    "bootstrap": "^4.6.0",
+    "axios": "^0.21.1",
     "framer-motion": "^4.1.2",
+    "graphql": "^15.5.0",
     "image-trace-loader": "^1.0.2",
     "imagemin-gifsicle": "^7.0.0",
     "imagemin-mozjpeg": "^9.0.0",
