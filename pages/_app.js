@@ -405,7 +405,10 @@ class MyApp extends App {
           color="linear-gradient(90deg, #5f3f91, #8c2483, #e4003f)"
         />
         <Head>
-          <link rel="icon" href="/favicon.ico" />
+          <meta
+            name="viewport"
+            content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
+          />
         </Head>
         <div className={`app-theme ${this.state.darkTheme ? "dark" : "light"}`}>
           <ApolloProvider client={client}>
