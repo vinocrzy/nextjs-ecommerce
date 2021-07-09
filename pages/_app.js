@@ -25,8 +25,8 @@ class MyApp extends App {
     isOrderOpen: false,
     isWishlistOpen: false,
     isMenuOpen: false,
-    modalLogin: false,
-    modalSignup: false,
+    isLoginOpen: false,
+    isSignupOpen: false,
     searchQuery: "",
   };
 
@@ -121,11 +121,11 @@ class MyApp extends App {
   setMenuOpen = (val) => {
     this.setState({ isMenuOpen: val });
   };
-  setModalLogin = (val) => {
-    this.setState({ modalLogin: val });
+  setLoginOpen = (val) => {
+    this.setState({ isLoginOpen: val });
   };
-  setModalSignup = (val) => {
-    this.setState({ modalSignup: val });
+  setSignupOpen = (val) => {
+    this.setState({ isSignupOpen: val });
   };
   setSearchQuery = (val) => {
     this.setState({ searchQuery: val });
@@ -377,8 +377,8 @@ class MyApp extends App {
       isOrderOpen: this.state.isOrderOpen,
       isWishlistOpen: this.state.isWishlistOpen,
       isMenuOpen: this.state.isMenuOpen,
-      modalLogin: this.state.modalLogin,
-      modalSignup: this.state.modalSignup,
+      isLoginOpen: this.state.isLoginOpen,
+      isSignupOpen: this.state.isSignupOpen,
       searchQuery: this.state.searchQuery,
       setSearchQuery: this.setSearchQuery,
       setUser: this.setUser,
@@ -393,8 +393,8 @@ class MyApp extends App {
       setOrderOpen: this.setOrderOpen,
       setWishlistOpen: this.setWishlistOpen,
       setMenuOpen: this.setMenuOpen,
-      setModalLogin: this.setModalLogin,
-      setModalSignup: this.setModalSignup,
+      setLoginOpen: this.setLoginOpen,
+      setSignupOpen: this.setSignupOpen,
     };
 
     return (
